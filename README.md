@@ -1,58 +1,114 @@
-# Generative Adversarial Networks (GAN) model from Scratch
+# Generative Adversarial Networks (GAN) Model from Scratch
 
 ## Overview
-### This projects explores the field of Deep Learning Neural Networks, specifically in the world of GANs. The primary objective of this project is to build a Deep Convolutional GAN (DCGAN) from scratch in PyTorch, following the architecture laid out in the following:
-### 2014 Research Paper : **Generative Adversarial Nets** by *Ian Goodfellow*.
-### 2015 Research Paper : *UNSUPERVISED REPRESENTATION LEARNING WITH DEEP CONVOLUTIONAL GENERATIVE ADVERSARIAL NETWORKS* by Alec Radford & Luke Metz
 
-### The implementation successfull generates Handwritten Digitals trained from the popular MNIST dataset. User can train the model on any dataset, and it should generate the images.
+This project explores the field of Deep Learning Neural Networks, specifically focusing on Generative Adversarial Networks (GANs). The primary objective is to build a Deep Convolutional GAN (DCGAN) from scratch using PyTorch, following the architectures described in foundational research papers.
 
+### Research Papers
 
-## Key Concepts behind GAN
-### GAN works on the principle in which two compete against each other, in a zero-sum game.
-### 1. The Generator(G): 
-- Task: To generate realistic dataspace
-- Input: A random noise vector z
-- Output: A fake dataspace (eg., a fake image)
-- Objective: To produce images so realistic that it can fool the Discriminator to classify them as real
+- **2014**: *Generative Adversarial Nets* by Ian Goodfellow et al.
+- **2015**: *Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks* by Alec Radford and Luke Metz
 
-### 2. The Discriminator(D): 
-- Task: To distinguish between real and fake data
-- Input: A fake image
-- Output: Probability (value btw 0 and 1) that the input image is "Real"
-- Objective: To correctly identify the real images as real and fake images as fake
+The implementation successfully generates handwritten digits trained on the popular MNIST dataset. The model is designed to be flexible and can be trained on custom datasets to generate domain-specific images.
 
-During training, the generator is constantly trying to outsmart the discriminator by generating better and better fakes, while the discriminator is working to become a better detective and correctly classify the images. 
+## Key Concepts Behind GANs
 
+GANs operate on an adversarial training principle where two neural networks compete against each other in a zero-sum game framework.
+
+### 1. The Generator (G)
+
+- **Task**: Generate realistic synthetic data
+- **Input**: Random noise vector `z` sampled from a latent space
+- **Output**: Synthetic data samples (e.g., generated images)
+- **Objective**: Produce samples realistic enough to fool the Discriminator into classifying them as real
+
+### 2. The Discriminator (D)
+
+- **Task**: Distinguish between real and synthetic data
+- **Input**: Either real data from the training set or fake data from the Generator
+- **Output**: Probability value between 0 and 1 indicating whether the input is real
+- **Objective**: Correctly classify real samples as real (output ≈ 1) and fake samples as fake (output ≈ 0)
+
+During training, the Generator continuously improves at creating realistic samples to deceive the Discriminator, while the Discriminator becomes increasingly adept at identifying synthetic data. This adversarial process drives both networks toward optimal performance.
 
 ## Architecture: DCGAN
 
-### Generator
-#### It's job is to upsample the latent space vector z into a full-sized image.
-#### Architecture Flow: 
+### Generator Network
 
-##### Input: z (a 100-dim vector) is projected and reshaped to (1024, 4, 4).
-##### CONV 1: (1024, 4, 4)  -> (512, 8, 8)
-##### CONV 2: (512, 8, 8)   -> (256, 16, 16)
-##### CONV 3: (256, 16, 16) -> (128, 32, 32)
-##### CONV 4: (128, 32, 32) -> (nc, 64, 64)
-##### Output: nn.Tanh()
+The Generator upsamples a low-dimensional latent vector into a full-resolution image using transposed convolutions.
 
-Note: nc refers to the number of image channels (3-RGB, 1-B&W)
+#### Architecture Flow
 
+```
+Input: z (100-dimensional latent vector)
+  ↓ Project and reshape to (1024, 4, 4)
+  
+ConvTranspose2d Layer 1: (1024, 4, 4)   → (512, 8, 8)
+ConvTranspose2d Layer 2: (512, 8, 8)    → (256, 16, 16)
+ConvTranspose2d Layer 3: (256, 16, 16)  → (128, 32, 32)
+ConvTranspose2d Layer 4: (128, 32, 32)  → (nc, 64, 64)
+  
+Output: Tanh activation → Image (nc, 64, 64)
+```
 
-### Discriminator 
+**Note**: `nc` refers to the number of image channels (1 for grayscale, 3 for RGB)
 
-#### The Discriminator's job is to downsample an image into a single probability. It's a standard Convolutional Neural Network (CNN).
+### Discriminator Network
 
-#### Architecture Flow:
+The Discriminator downsamples an input image into a single probability score using standard convolutional layers.
 
-##### Input: Image (nc, 64, 64)
-##### CONV 1: (nc, 64, 64)   -> (128, 32, 32)
-##### CONV 2: (128, 32, 32) -> (256, 16, 16)
-##### CONV 3: (256, 16, 16) -> (512, 8, 8)
-##### CONV 4: (512, 8, 8)   -> (1024, 4, 4)
-##### Output: (1024, 4, 4) -> (1, 1, 1) -> nn.Sigmoid()
+#### Architecture Flow
+
+```
+Input: Image (nc, 64, 64)
+  
+Conv2d Layer 1: (nc, 64, 64)   → (128, 32, 32)
+Conv2d Layer 2: (128, 32, 32)  → (256, 16, 16)
+Conv2d Layer 3: (256, 16, 16)  → (512, 8, 8)
+Conv2d Layer 4: (512, 8, 8)    → (1024, 4, 4)
+  
+Flatten and Dense: (1024, 4, 4) → (1, 1, 1)
+  
+Output: Sigmoid activation → Probability [0, 1]
+```
+
+## Training Process
+
+The training follows the standard GAN training procedure with alternating updates:
+
+1. **Train Discriminator**: Update D to maximize its ability to distinguish real from fake samples
+2. **Train Generator**: Update G to maximize D's error (minimize D's ability to detect fakes)
+
+This minimax game continues until convergence, where the Generator produces highly realistic samples.
+
+## Requirements
+
+```
+torch>=1.9.0
+torchvision>=0.10.0
+numpy>=1.19.0
+matplotlib>=3.3.0
+```
+
+## Usage
+
+```python
+# Train the DCGAN model
+python train.py --dataset mnist --epochs 100 --batch_size 64
+
+# Generate samples
+python generate.py --model_path checkpoints/generator.pth --num_samples 16
+```
+
+## Results
+
+The model successfully generates handwritten digits that closely resemble the MNIST dataset after sufficient training epochs.
+
+## References
+
+1. Goodfellow, I., et al. (2014). "Generative Adversarial Nets." *Advances in Neural Information Processing Systems*.
+2. Radford, A., Metz, L., & Chintala, S. (2015). "Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks." *arXiv preprint arXiv:1511.06434*.
+
 
 
 ## Colab Link: https://colab.research.google.com/drive/1Oc47WQUD4YSISgI5OOzb995leTcLwqyl?usp=sharing
